@@ -73,13 +73,13 @@
         </div>
 
         <div class="flex items-center gap-3">
-          <!-- Outlook sync button -->
+          <!-- Email sync button (IMAP o Outlook) -->
           <button
-            v-if="$page.props.auth.user.is_microsoft_connected"
-            @click="syncOutlook"
+            v-if="$page.props.auth.user.is_email_connected"
+            @click="syncEmail"
             :disabled="syncing"
             class="btn-ghost text-xs"
-            title="Sincronizza email Outlook"
+            title="Sincronizza email"
           >
             <svg class="w-4 h-4" :class="syncing ? 'animate-spin' : ''" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15" />
@@ -170,9 +170,13 @@ function logout() {
   logoutForm.value?.submit();
 }
 
-async function syncOutlook() {
+async function syncEmail() {
   syncing.value = true;
-  router.post(route('outlook.sync'), {}, {
+  // Usa IMAP se configurato, altrimenti Outlook OAuth
+  const syncRoute = page.props.auth.user.is_imap_connected
+    ? route('imap.sync')
+    : route('outlook.sync');
+  router.post(syncRoute, {}, {
     onFinish: () => { syncing.value = false; },
   });
 }

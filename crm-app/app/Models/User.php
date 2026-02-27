@@ -14,15 +14,22 @@ class User extends Authenticatable
     protected $fillable = [
         'name','email','password','phone','avatar','position','is_active',
         'microsoft_token','microsoft_refresh_token','microsoft_token_expires_at','microsoft_user_id',
+        'imap_host','imap_port','imap_encryption','imap_username','imap_password','imap_protocol','imap_last_sync_at',
     ];
 
-    protected $hidden = ['password','remember_token','microsoft_token','microsoft_refresh_token'];
+    protected $hidden = [
+        'password','remember_token',
+        'microsoft_token','microsoft_refresh_token',
+        'imap_password',
+    ];
 
     protected $casts = [
-        'email_verified_at' => 'datetime',
+        'email_verified_at'   => 'datetime',
         'microsoft_token_expires_at' => 'datetime',
-        'is_active' => 'boolean',
-        'password' => 'hashed',
+        'imap_last_sync_at'   => 'datetime',
+        'imap_port'           => 'integer',
+        'is_active'           => 'boolean',
+        'password'            => 'hashed',
     ];
 
     public function customers() {
@@ -36,6 +43,14 @@ class User extends Authenticatable
     }
     public function isMicrosoftConnected(): bool {
         return !empty($this->microsoft_token) && $this->microsoft_token_expires_at?->isFuture();
+    }
+
+    public function isImapConnected(): bool {
+        return !empty($this->imap_host) && !empty($this->imap_username) && !empty($this->imap_password);
+    }
+
+    public function isEmailConnected(): bool {
+        return $this->isMicrosoftConnected() || $this->isImapConnected();
     }
     public function getAvatarUrlAttribute(): string {
         if ($this->avatar) return asset('storage/'.$this->avatar);

@@ -3,6 +3,7 @@ use App\Http\Controllers\ActivityController;
 use App\Http\Controllers\Auth\AuthController;
 use App\Http\Controllers\CustomerController;
 use App\Http\Controllers\DashboardController;
+use App\Http\Controllers\ImapController;
 use App\Http\Controllers\OutlookController;
 use App\Http\Controllers\TaskController;
 use App\Http\Controllers\UserController;
@@ -41,6 +42,12 @@ Route::middleware('auth')->group(function () {
     Route::get('/outlook/callback', [OutlookController::class, 'callback'])->name('outlook.callback');
     Route::post('/outlook/disconnect', [OutlookController::class, 'disconnect'])->name('outlook.disconnect');
     Route::post('/outlook/sync', [OutlookController::class, 'sync'])->name('outlook.sync');
+
+    // IMAP Email Integration (senza Azure AD)
+    Route::post('/imap/credentials', [ImapController::class, 'saveCredentials'])->name('imap.credentials');
+    Route::post('/imap/sync', [ImapController::class, 'sync'])->name('imap.sync');
+    Route::post('/imap/disconnect', [ImapController::class, 'disconnect'])->name('imap.disconnect');
+    Route::post('/imap/test', [ImapController::class, 'testConnection'])->name('imap.test');
 
     // Profile
     Route::get('/profile', [UserController::class, 'profile'])->name('profile');

@@ -25,6 +25,10 @@ class HandleInertiaRequests extends Middleware
                     'position' => $request->user()->position,
                     'roles' => $request->user()->getRoleNames(),
                     'is_microsoft_connected' => $request->user()->isMicrosoftConnected(),
+                    'is_imap_connected' => $request->user()->isImapConnected(),
+                    'is_email_connected' => $request->user()->isEmailConnected(),
+                    'imap_last_sync_at' => $request->user()->imap_last_sync_at,
+                    'imap_host' => $request->user()->imap_host,
                 ] : null,
             ],
             'flash' => [
