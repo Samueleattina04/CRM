@@ -4,7 +4,7 @@ namespace App\Http\Controllers;
 use App\Services\ImapEmailService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
-use Illuminate\Support\Facades\Crypt;
+use Illuminate\Support\Facades\Crypt; // used in saveCredentials to encrypt password
 
 class ImapController extends Controller
 {
@@ -44,15 +44,6 @@ class ImapController extends Controller
     public function sync()
     {
         $user = Auth::user();
-
-        // Decifra la password IMAP prima della sync
-        if ($user->imap_password) {
-            try {
-                $user->imap_password = Crypt::decryptString($user->imap_password);
-            } catch (\Exception $e) {
-                return back()->with('error', 'Errore credenziali IMAP. Riconfigura la connessione email.');
-            }
-        }
 
         $result = $this->imap->syncEmails($user);
 

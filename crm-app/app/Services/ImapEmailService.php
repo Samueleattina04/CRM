@@ -5,6 +5,7 @@ use App\Models\Activity;
 use App\Models\Customer;
 use App\Models\EmailSyncLog;
 use App\Models\User;
+use Illuminate\Support\Facades\Crypt;
 use Illuminate\Support\Facades\Log;
 use Webklex\PHPIMAP\ClientManager;
 use Webklex\PHPIMAP\Client;
@@ -19,12 +20,20 @@ class ImapEmailService
     public function syncEmails(User $user, int $limit = 50): array
     {
         // Verifica che l'utente abbia credenziali IMAP configurate
-        $host     = $user->imap_host     ?? config('imap.accounts.default.host');
-        $port     = $user->imap_port     ?? config('imap.accounts.default.port', 993);
-        $username = $user->imap_username ?? config('imap.accounts.default.username');
-        $password = $user->imap_password ?? config('imap.accounts.default.password');
-        $protocol = $user->imap_protocol ?? config('imap.accounts.default.protocol', 'imap');
+        $host       = $user->imap_host       ?? config('imap.accounts.default.host');
+        $port       = $user->imap_port       ?? config('imap.accounts.default.port', 993);
+        $username   = $user->imap_username   ?? config('imap.accounts.default.username');
+        $protocol   = $user->imap_protocol   ?? config('imap.accounts.default.protocol', 'imap');
         $encryption = $user->imap_encryption ?? config('imap.accounts.default.encryption', 'ssl');
+
+        // Decifra la password (salvata cifrata con Crypt::encryptString)
+        $rawPassword = $user->imap_password ?? config('imap.accounts.default.password');
+        try {
+            $password = $rawPassword ? Crypt::decryptString($rawPassword) : null;
+        } catch (\Exception $e) {
+            // Fallback: se non è cifrata (es. config da env), usala com'è
+            $password = $rawPassword;
+        }
 
         if (!$host || !$username || !$password) {
             return ['error' => 'Credenziali IMAP non configurate per questo utente.'];
