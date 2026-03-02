@@ -8,10 +8,6 @@
         --color-secondary: 168 85 247;
     }
     
-    * {
-        @apply border-border;
-    }
-    
     body {
         @apply bg-gray-50 text-gray-900 antialiased;
         font-family: 'Inter', system-ui, -apple-system, sans-serif;
