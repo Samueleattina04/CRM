@@ -251,10 +251,55 @@
     <Modal :show="showAddActivity" @close="showAddActivity = false" :title="activityModalTitle">
       <form @submit.prevent="submitActivity" class="space-y-4 p-6">
         <input type="hidden" v-model="activityForm.type" />
+
+        <!-- Direction toggle (call/whatsapp/sms/email) -->
+        <div v-if="['call','whatsapp','sms','email'].includes(activityForm.type)" class="form-group">
+          <label class="label">Direzione</label>
+          <div class="flex gap-2">
+            <button type="button"
+              @click="activityForm.direction = 'inbound'"
+              :class="['flex-1 py-2.5 px-3 rounded-lg border-2 text-sm font-medium transition-all flex items-center justify-center gap-2',
+                activityForm.direction === 'inbound'
+                  ? 'border-blue-500 bg-blue-50 text-blue-700'
+                  : 'border-gray-200 text-gray-500 hover:border-gray-300']"
+            >
+              📥 <span>{{ directionInboundLabel }}</span>
+            </button>
+            <button type="button"
+              @click="activityForm.direction = 'outbound'"
+              :class="['flex-1 py-2.5 px-3 rounded-lg border-2 text-sm font-medium transition-all flex items-center justify-center gap-2',
+                activityForm.direction === 'outbound'
+                  ? 'border-green-500 bg-green-50 text-green-700'
+                  : 'border-gray-200 text-gray-500 hover:border-gray-300']"
+            >
+              📤 <span>{{ directionOutboundLabel }}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Phone number (call/whatsapp/sms) -->
+        <div v-if="['call','whatsapp','sms'].includes(activityForm.type)" class="form-group">
+          <label class="label">Numero di telefono</label>
+          <div class="flex gap-2">
+            <input v-model="activityForm.phone_number" type="tel" class="input flex-1" placeholder="+39 000 000 0000" />
+            <button v-if="customer.mobile" type="button"
+              @click="activityForm.phone_number = customer.mobile"
+              class="px-3 py-2 text-xs bg-indigo-50 text-indigo-700 border border-indigo-200 rounded-lg hover:bg-indigo-100 transition-colors whitespace-nowrap"
+              :title="customer.mobile"
+            >📱 Cellulare</button>
+            <button v-if="customer.phone" type="button"
+              @click="activityForm.phone_number = customer.phone"
+              class="px-3 py-2 text-xs bg-gray-50 text-gray-700 border border-gray-200 rounded-lg hover:bg-gray-100 transition-colors whitespace-nowrap"
+              :title="customer.phone"
+            >☎️ Fisso</button>
+          </div>
+        </div>
+
         <div class="form-group">
           <label class="label">Oggetto / Titolo *</label>
-          <input v-model="activityForm.subject" type="text" class="input" placeholder="Es: Chiamata follow-up" required />
+          <input v-model="activityForm.subject" type="text" class="input" :placeholder="activitySubjectPlaceholder" required />
         </div>
+
         <div class="grid grid-cols-2 gap-3">
           <div class="form-group">
             <label class="label">Data e ora *</label>
@@ -269,22 +314,26 @@
             </select>
           </div>
         </div>
+
         <div v-if="['call','meeting'].includes(activityForm.type)" class="form-group">
           <label class="label">Durata (minuti)</label>
-          <input v-model="activityForm.duration_minutes" type="number" min="0" class="input" placeholder="30" />
+          <input v-model="activityForm.duration_minutes" type="number" min="0" class="input" placeholder="5" />
         </div>
+
         <div class="form-group">
           <label class="label">Note / Contenuto</label>
-          <textarea v-model="activityForm.body" rows="4" class="input" placeholder="Dettagli sull'interazione..."></textarea>
+          <textarea v-model="activityForm.body" rows="3" class="input" :placeholder="activityBodyPlaceholder"></textarea>
         </div>
+
         <div class="form-group">
           <label class="label">Allegati</label>
           <input type="file" ref="fileInput" multiple class="input text-xs" @change="handleFiles" />
         </div>
+
         <div class="flex justify-end gap-3 pt-2">
           <button type="button" @click="showAddActivity = false" class="btn-secondary">Annulla</button>
           <button type="submit" :disabled="activityForm.processing" class="btn-primary">
-            {{ activityForm.processing ? 'Salvataggio...' : 'Salva Attività' }}
+            {{ activityForm.processing ? 'Salvataggio...' : 'Salva' }}
           </button>
         </div>
       </form>
@@ -432,9 +481,43 @@ const activityModalTitle = computed(() => {
   return m[activityForm.type] || 'Aggiungi Attività';
 });
 
+const directionInboundLabel = computed(() => {
+  const m = { call: 'Ho ricevuto la chiamata', whatsapp: 'Ha scritto lui/lei', sms: 'Ha scritto lui/lei', email: 'Email ricevuta' };
+  return m[activityForm.type] || 'In entrata';
+});
+
+const directionOutboundLabel = computed(() => {
+  const m = { call: 'Ho chiamato io', whatsapp: 'Ho scritto io', sms: 'Ho scritto io', email: 'Email inviata' };
+  return m[activityForm.type] || 'In uscita';
+});
+
+const activitySubjectPlaceholder = computed(() => {
+  const m = { call: 'Es: Chiamata aggiornamento ordine', whatsapp: 'Es: Discussione preventivo', sms: 'Es: Conferma appuntamento', meeting: 'Es: Riunione trimestrale', email: 'Es: Follow-up proposta', note: 'Es: Nota interna' };
+  return m[activityForm.type] || 'Oggetto';
+});
+
+const activityBodyPlaceholder = computed(() => {
+  const m = {
+    call: 'Di cosa avete parlato? Prossimi passi...',
+    whatsapp: 'Contenuto del messaggio o riassunto della conversazione...',
+    sms: 'Testo del messaggio...',
+    meeting: 'Argomenti discussi, decisioni prese, prossimi passi...',
+    email: 'Contenuto o riassunto dell\'email...',
+    note: 'Appunti, osservazioni interne...',
+  };
+  return m[activityForm.type] || 'Dettagli sull\'interazione...';
+});
+
 function openActivity(type) {
+  activityForm.reset();
   activityForm.type = type;
-  activityForm.direction = ['email_incoming'].includes(type) ? 'inbound' : type === 'note' ? 'internal' : 'outbound';
+  activityForm.occurred_at = new Date().toISOString().slice(0, 16);
+  activityForm.status = 'completed';
+  activityForm.direction = type === 'note' ? 'internal' : 'inbound';
+  // Pre-fill phone number from customer
+  if (['call','whatsapp','sms'].includes(type)) {
+    activityForm.phone_number = props.customer.mobile || props.customer.phone || '';
+  }
   showAddActivity.value = true;
 }
 
