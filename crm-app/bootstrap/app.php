@@ -21,5 +21,14 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // Log all errors immediately so they're visible even if the renderer
+        // times out (known issue on Windows with many vendor files)
+        $exceptions->reportable(function (\Throwable $e) {
+            \Illuminate\Support\Facades\Log::error('[CRM] '.$e->getMessage(), [
+                'file' => $e->getFile(),
+                'line' => $e->getLine(),
+                'url'  => request()?->fullUrl(),
+                'user' => auth()->id(),
+            ]);
+        });
     })->create();

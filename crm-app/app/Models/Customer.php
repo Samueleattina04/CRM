@@ -19,6 +19,8 @@ class Customer extends Model
     protected $casts = [
         'last_contact_at' => 'datetime',
         'annual_value' => 'decimal:2',
+        'assigned_to' => 'integer',
+        'created_by' => 'integer',
     ];
 
     protected $appends = ['full_name','avatar_url'];

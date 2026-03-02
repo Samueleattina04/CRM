@@ -18,6 +18,9 @@ class Activity extends Model
     protected $casts = [
         'occurred_at' => 'datetime',
         'metadata' => 'array',
+        'customer_id' => 'integer',
+        'user_id' => 'integer',
+        'duration_minutes' => 'integer',
     ];
 
     public function customer() {
